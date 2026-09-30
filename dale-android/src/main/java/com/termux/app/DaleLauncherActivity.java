@@ -11,6 +11,7 @@ import android.view.*;
 import java.util.Locale;
 
 public final class DaleLauncherActivity extends Activity {
+    private static final String EXTRA_DALE_SOURCE = "dale_source";
     private DaleHome home;
 
     @Override public void onCreate(Bundle state) {
@@ -25,7 +26,8 @@ public final class DaleLauncherActivity extends Activity {
         try {
             if ("terminal".equals(id)) {
                 Intent i = new Intent(this, TermuxActivity.class);
-                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                i.putExtra(EXTRA_DALE_SOURCE, "launcher");
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(i);
             } else if ("code".equals(id)) {
                 startActivity(new Intent(this, CodeChatActivity.class));
