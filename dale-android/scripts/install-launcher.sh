@@ -33,7 +33,8 @@ if launcher not in text:
 text = text.replace(launcher, "", 1)
 
 anchor = """        <activity
-            android:name=".app.TermuxActivity""""
+            android:name=".app.TermuxActivity"
+        """
 
 insert = """        <activity
             android:name=".app.DaleLauncherActivity"
