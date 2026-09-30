@@ -148,20 +148,21 @@ jobs:
 
           MANIFEST="${ROOT}/AndroidManifest.xml"
           python3 - "${MANIFEST}" <<'PY'
-from pathlib import Path
-import sys
-p=Path(sys.argv[1]); s=p.read_text()
-launcher='''            <intent-filter>
+          from pathlib import Path
+          import sys
+          p = Path(sys.argv[1])
+          s = p.read_text()
+          launcher = """            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>'''
-if launcher not in s:
-    raise SystemExit("Termux launcher filter not found")
-s=s.replace(launcher,"",1)
-anchor='''        <activity
-            android:name=".app.TermuxActivity"'''
-insert='''        <activity
+            </intent-filter>"""
+          if launcher not in s:
+              raise SystemExit("Termux launcher filter not found")
+          s = s.replace(launcher, "", 1)
+          anchor = """        <activity
+            android:name=".app.TermuxActivity""""
+          insert = """        <activity
             android:name=".app.DaleLauncherActivity"
             android:exported="true"
             android:screenOrientation="portrait"
@@ -172,14 +173,16 @@ insert='''        <activity
             </intent-filter>
         </activity>
 
-'''
-s=s.replace(anchor,insert+anchor,1)
-p.write_text(s)
-PY
+"""
+          if anchor not in s:
+              raise SystemExit("TermuxActivity manifest anchor not found")
+          s = s.replace(anchor, insert + anchor, 1)
+          p.write_text(s)
+          PY
           grep -q 'android:name=".app.DaleLauncherActivity"' "${MANIFEST}"
-          grep -q 'DaleLauncherActivity.java' <(printf '%s\n' "${PKG}/DaleLauncherActivity.java")
-          ! grep -A4 -B1 'android:name=".app.TermuxActivity"' "${MANIFEST}" | grep -q 'category android:name="android.intent.category.LAUNCHER"'
+          ! grep -A6 -B1 'android:name=".app.TermuxActivity"' "${MANIFEST}" | grep -q 'category android:name="android.intent.category.LAUNCHER"'
           echo "DALE 3D shell is the sole Android launcher entry point."
+
 
       - name: Build debug APK
         working-directory: termux-app
