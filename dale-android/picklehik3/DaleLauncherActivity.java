@@ -17,6 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.caverock.androidsvg.SVG;
+import com.caverock.androidsvg.SVGParseException;
 
 import java.io.IOException;
 
@@ -127,7 +128,7 @@ public final class DaleLauncherActivity extends Activity {
             SVG loaded = null;
             try {
                 loaded = SVG.getFromAsset(getAssets(), SVG_ASSET);
-            } catch (SVG.SVGParseException | IOException ignored) {
+            } catch (SVGParseException | IOException ignored) {
                 // The launcher still works without the optional artwork.
             }
             netHunterSvg = loaded;
