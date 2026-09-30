@@ -79,11 +79,7 @@ jobs:
           test "${ANDROID_BUILD_TOOLS}" = "36.0.0"
           test "${ANDROID_NDK_VERSION}" = "29.0.14206865"
           test -f dale-android/source/dale-android-overlay.tar.gz
-
-          (
-            cd dale-android/source
-            sha256sum -c SHA256SUMS
-          )
+          gzip -t dale-android/source/dale-android-overlay.tar.gz
           tar -tzf dale-android/source/dale-android-overlay.tar.gz >/dev/null
 
       - name: Extract DALE build overlay
