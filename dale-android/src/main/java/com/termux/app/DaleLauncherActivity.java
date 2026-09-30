@@ -12,6 +12,8 @@ import java.util.Locale;
 
 public final class DaleLauncherActivity extends Activity {
     private static final String EXTRA_DALE_SOURCE = "dale_source";
+    private static final String EXTRA_DALE_TERMINAL_MODE = "dale_terminal_mode";
+    private static final String EXTRA_DALE_TERMINAL_COMMAND = "dale_terminal_command";
     private DaleHome home;
 
     @Override public void onCreate(Bundle state) {
@@ -27,10 +29,14 @@ public final class DaleLauncherActivity extends Activity {
             if ("terminal".equals(id)) {
                 Intent i = new Intent(this, TermuxActivity.class);
                 i.putExtra(EXTRA_DALE_SOURCE, "launcher");
+                i.putExtra(EXTRA_DALE_TERMINAL_MODE, "kotlin-tui");
+                i.putExtra(EXTRA_DALE_TERMINAL_COMMAND, "kotlin");
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(i);
             } else if ("code".equals(id)) {
-                startActivity(new Intent(this, CodeChatActivity.class));
+                Intent i = new Intent(this, CodeChatActivity.class);
+                i.putExtra(EXTRA_DALE_SOURCE, "launcher");
+                startActivity(i);
             } else if ("workspace".equals(id)) {
                 Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
                 i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -40,27 +46,34 @@ public final class DaleLauncherActivity extends Activity {
             } else if ("settings".equals(id)) {
                 startActivity(new Intent(Settings.ACTION_SETTINGS));
             } else if ("lanie".equals(id)) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://127.0.0.1:8080")));
-            } else {
-                new AlertDialog.Builder(this)
-                    .setTitle(id.toUpperCase(Locale.US))
-                    .setMessage("DALE capability: " + id
-                        + "\n\nThe shell is implemented; this capability is not falsely reported as connected to a backend.")
-                    .setPositiveButton("OK", null).show();
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("http://127.0.0.1:8080"));
+                if (i.resolveActivity(getPackageManager()) != null) {
+                    startActivity(i);
+                } else {
+                    showDialog("DALE", "LANIE server not accessible at http://127.0.0.1:8080");
+                }
+            } else if ("rag".equals(id) || "voice".equals(id) || "vision".equals(id) || "git".equals(id)) {
+                showDialog(id.toUpperCase(Locale.US),
+                    "DALE capability: " + id + "\n\nThe shell is implemented; this capability is not falsely reported as connected to a backend.");
             }
         } catch (Exception e) {
-            new AlertDialog.Builder(this)
-                .setTitle("DALE")
-                .setMessage("Could not open " + id + ": " + e.getMessage())
-                .setPositiveButton("OK", null).show();
+            showDialog("DALE", "Could not open " + id + ": " + e.getMessage());
         }
+    }
+
+    private void showDialog(String title, String message) {
+        new AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show();
     }
 
     private final class DaleHome extends View {
         final Paint p = new Paint(3), s = new Paint(3);
         final String[] ids = {"workspace","terminal","code","lanie","rag","voice","vision","git","settings"};
         final String[] names = {"WORKSPACE","TERMINAL","CODE","LANIE","RAG","VOICE","VISION","GIT","SETTINGS"};
-        final String[] desc = {"files + projects","shell runtime","agent editor","local AI",
+        final String[] desc = {"files + projects","Kotlin TUI / shell","agent editor","local AI",
                 "retrieval","whisper","camera","repositories","android"};
         float downX, downY, spin = 0;
         int selected = 0;
@@ -75,11 +88,13 @@ public final class DaleLauncherActivity extends Activity {
             int w = getWidth(), h = getHeight();
             c.drawColor(Color.rgb(3, 6, 12));
 
+            // Background gradient
             p.setShader(new LinearGradient(0, 0, w, h,
                     Color.rgb(7, 17, 30), Color.rgb(2, 4, 9), Shader.TileMode.CLAMP));
             c.drawRect(0, 0, w, h, p);
             p.setShader(null);
 
+            // Grid lines
             s.setColor(Color.argb(34, 99, 230, 255));
             s.setStrokeWidth(1);
             for (int i = -10; i < 12; i++) {
@@ -91,21 +106,25 @@ public final class DaleLauncherActivity extends Activity {
                 c.drawLine(0, y, w, y, s);
             }
 
+            // Header: DALE
             p.setColor(Color.WHITE);
             p.setTypeface(Typeface.DEFAULT_BOLD);
             p.setTextSize(22);
             c.drawText("DALE", 24, 42, p);
 
+            // Subheader
             p.setColor(Color.rgb(99, 230, 255));
             p.setTextSize(10);
             c.drawText("LOCAL • AGENT • WORKSPACE", 24, 61, p);
 
+            // Top right label
             p.setTextAlign(Paint.Align.RIGHT);
             p.setColor(Color.rgb(150, 170, 185));
             p.setTextSize(9);
             c.drawText("DALE CORE / 3D SHELL", w - 20, 40, p);
             p.setTextAlign(Paint.Align.LEFT);
 
+            // Center core sphere
             float cx = w / 2f, cy = h * .40f, r = Math.min(w, h) * .105f;
             p.setShader(new RadialGradient(cx - r * .25f, cy - r * .25f, r,
                     new int[]{Color.rgb(120,245,255), Color.rgb(12,60,78), Color.rgb(3,8,14)},
@@ -113,10 +132,12 @@ public final class DaleLauncherActivity extends Activity {
             c.drawCircle(cx, cy, r, p);
             p.setShader(null);
 
+            // Core outline
             s.setColor(Color.argb(180, 99, 230, 255));
             s.setStrokeWidth(2);
             c.drawCircle(cx, cy, r * 1.3f, s);
 
+            // Core text
             p.setTextAlign(Paint.Align.CENTER);
             p.setColor(Color.WHITE);
             p.setTypeface(Typeface.DEFAULT_BOLD);
@@ -127,6 +148,7 @@ public final class DaleLauncherActivity extends Activity {
             p.setColor(Color.rgb(130,215,235));
             c.drawText("CONTROL PLANE", cx, cy + r + 20, p);
 
+            // Orbital nodes
             float orbit = Math.min(w, h) * .34f;
             for (int i = 0; i < ids.length; i++) {
                 double a = Math.toRadians(i * 40 - 160 + spin * .05f);
@@ -137,34 +159,44 @@ public final class DaleLauncherActivity extends Activity {
                 float cw = 112 * scale, ch = 66 * scale;
                 RectF rr = new RectF(x-cw/2, y-ch/2, x+cw/2, y+ch/2);
 
+                // Node background
                 p.setColor(Color.argb(i == selected ? 235 : 185, 8, 15, 25));
                 c.drawRoundRect(rr, 12, 12, p);
+
+                // Node border
                 s.setColor(i == selected ? Color.rgb(99,230,255) : Color.argb(85,110,150,170));
                 s.setStrokeWidth(i == selected ? 2.2f : 1);
                 c.drawRoundRect(rr, 12, 12, s);
 
+                // Node name text
                 p.setTextAlign(Paint.Align.LEFT);
                 p.setTypeface(Typeface.DEFAULT_BOLD);
                 p.setTextSize(10 * scale);
                 p.setColor(i == selected ? Color.rgb(99,230,255) : Color.rgb(180,195,208));
                 c.drawText(names[i], rr.left + 10 * scale, rr.top + 22 * scale, p);
 
+                // Node description text
                 p.setTypeface(Typeface.DEFAULT);
                 p.setTextSize(7.5f * scale);
                 p.setColor(Color.rgb(120,138,153));
                 c.drawText(desc[i], rr.left + 10 * scale, rr.top + 39 * scale, p);
 
+                // Node status indicator
                 p.setColor(i == selected ? Color.rgb(99,230,255) : Color.rgb(65,90,105));
                 c.drawCircle(rr.left + 12 * scale, rr.bottom - 11 * scale, 3 * scale, p);
             }
 
+            // Bottom panel
             p.setColor(Color.argb(225, 4, 7, 13));
             c.drawRect(0, h - 82, w, h, p);
+
+            // Bottom panel text
             p.setTextAlign(Paint.Align.CENTER);
             p.setTypeface(Typeface.DEFAULT_BOLD);
             p.setTextSize(11);
             p.setColor(Color.rgb(99,230,255));
             c.drawText(names[selected], w/2f, h-52, p);
+
             p.setTypeface(Typeface.DEFAULT);
             p.setTextSize(9);
             p.setColor(Color.rgb(145,160,175));
@@ -180,6 +212,8 @@ public final class DaleLauncherActivity extends Activity {
             }
             if (e.getAction() == MotionEvent.ACTION_UP) {
                 float dx = e.getX() - downX;
+
+                // Swipe detection: minimum 60dp horizontal movement
                 if (Math.abs(dx) > 60) {
                     selected = Math.floorMod(selected + (dx > 0 ? -1 : 1), ids.length);
                     spin += dx > 0 ? 40 : -40;
@@ -187,10 +221,12 @@ public final class DaleLauncherActivity extends Activity {
                     return true;
                 }
 
+                // Tap detection: hit test against orbital nodes
                 float cx = getWidth()/2f, cy = getHeight()*.40f;
                 float orbit = Math.min(getWidth(), getHeight())*.34f;
                 int hit = -1;
                 float best = Float.MAX_VALUE;
+
                 for (int i = 0; i < ids.length; i++) {
                     double a = Math.toRadians(i*40 - 160 + spin*.05f);
                     float x = cx + (float)Math.cos(a)*orbit;
@@ -201,11 +237,14 @@ public final class DaleLauncherActivity extends Activity {
                         hit = i;
                     }
                 }
+
+                // Hit on orbital node
                 if (hit >= 0) {
                     selected = hit;
                     invalidate();
                     open(ids[selected]);
                 } else if (e.getY() > getHeight()-105) {
+                    // Hit on bottom panel
                     open(ids[selected]);
                 }
                 return true;
