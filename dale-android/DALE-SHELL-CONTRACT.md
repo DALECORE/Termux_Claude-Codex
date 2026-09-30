@@ -12,4 +12,12 @@ The Android APK is a DALE control-plane shell, not a plain terminal launcher.
 7. Horizontal swipe changes the active capability; tapping opens it.
 8. The UI is rendered natively with Canvas to keep the shell lightweight on Android.
 
+## Terminal contract
+
+The Terminal node is the DALE entry point into the existing Termux execution engine. DALE owns the launcher/home surface; `TermuxActivity` owns shell execution. The launcher must not replace the terminal runtime or pretend that a terminal backend is unavailable when `TermuxActivity` is present.
+
+## 3D launcher contract
+
+The Android `MAIN/LAUNCHER` entry point must be `DaleLauncherActivity`, with `TermuxActivity` retained as an internal execution activity. The launcher surface must expose the DALE CORE orbit and the Workspace, Terminal, Code, LANIE, RAG, Voice, Vision, Git, and Settings capability nodes.
+
 This contract is enforced by the Android build workflow, which injects and verifies the launcher activity before Gradle compilation.
