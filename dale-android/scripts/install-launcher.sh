@@ -9,11 +9,14 @@ TERMUX_ACTIVITY="${PKG}/TermuxActivity.java"
 
 mkdir -p "${PKG}"
 cp "${REPO_ROOT}/dale-android/src/main/java/com/termux/app/DaleLauncherView.java" "${PKG}/DaleLauncherView.java"
+cp "${REPO_ROOT}/dale-android/src/main/java/com/termux/app/DaleTerminalChromeView.java" "${PKG}/DaleTerminalChromeView.java"
 test -s "${PKG}/DaleLauncherView.java"
+test -s "${PKG}/DaleTerminalChromeView.java"
 test -f "${TERMUX_ACTIVITY}"
 
 grep -q 'class TermuxActivity' "${TERMUX_ACTIVITY}"
 grep -q 'DALE CORE' "${PKG}/DaleLauncherView.java"
+grep -q 'MUSEPOOL' "${PKG}/DaleTerminalChromeView.java"
 
 python3 - "${TERMUX_ACTIVITY}" <<'PY'
 from pathlib import Path
@@ -40,6 +43,14 @@ method = r'''
                 android.view.View launcher = host.findViewWithTag("dale_launcher_overlay");
                 if (launcher != null) host.removeView(launcher);
                 if (mTerminalView != null) mTerminalView.requestFocus();
+                android.view.View chrome = host.findViewWithTag("dale_terminal_chrome");
+                if (chrome == null) {
+                    chrome = com.termux.app.DaleTerminalChromeView.attach(TermuxActivity.this, host);
+                    chrome.setTag("dale_terminal_chrome");
+                } else {
+                    chrome.setVisibility(android.view.View.VISIBLE);
+                    chrome.bringToFront();
+                }
             }
 
             @Override public void onSettings() {
