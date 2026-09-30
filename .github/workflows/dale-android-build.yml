@@ -97,6 +97,15 @@ jobs:
           test -d "${GITHUB_WORKSPACE}/dale-build/payload"
           chmod +x "${GITHUB_WORKSPACE}/dale-build/payload/scripts/"*.sh
 
+      - name: Align overlay resource with pinned Termux source
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHORTCUTS="${GITHUB_WORKSPACE}/dale-build/payload/overlay/app/src/main/res/xml/shortcuts.xml"
+          sed -i 's/@drawable\/ic_launcher_foreground/@drawable\/ic_foreground/g' "${SHORTCUTS}"
+          grep -q '@drawable/ic_foreground' "${SHORTCUTS}"
+          ! grep -q '@drawable/ic_launcher_foreground' "${SHORTCUTS}"
+
       - name: Prepare pinned Termux source
         shell: bash
         run: |
