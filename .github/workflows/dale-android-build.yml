@@ -136,52 +136,7 @@ jobs:
         run: |
           set -euo pipefail
           ROOT="${GITHUB_WORKSPACE}/termux-app/app/src/main"
-          PKG="${ROOT}/java/com/termux/app"
-          mkdir -p "${PKG}"
-
-          cp "${GITHUB_WORKSPACE}/dale-android/src/main/java/com/termux/app/DaleLauncherActivity.java" \
-             "${PKG}/DaleLauncherActivity.java"
-          test -s "${PKG}/DaleLauncherActivity.java"
-          grep -q 'DALE CORE' "${PKG}/DaleLauncherActivity.java"
-          grep -q 'TermuxActivity.class' "${PKG}/DaleLauncherActivity.java"
-          echo "Using committed DALE 3D launcher source."
-
-          MANIFEST="${ROOT}/AndroidManifest.xml"
-          python3 - "${MANIFEST}" <<'PY'
-          from pathlib import Path
-          import sys
-          p = Path(sys.argv[1])
-          s = p.read_text()
-          launcher = """            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>"""
-          if launcher not in s:
-              raise SystemExit("Termux launcher filter not found")
-          s = s.replace(launcher, "", 1)
-          anchor = """        <activity
-            android:name=".app.TermuxActivity""""
-          insert = """        <activity
-            android:name=".app.DaleLauncherActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.TermuxActivity.DayNight.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-"""
-          if anchor not in s:
-              raise SystemExit("TermuxActivity manifest anchor not found")
-          s = s.replace(anchor, insert + anchor, 1)
-          p.write_text(s)
-          PY
-          grep -q 'android:name=".app.DaleLauncherActivity"' "${MANIFEST}"
-          ! grep -A6 -B1 'android:name=".app.TermuxActivity"' "${MANIFEST}" | grep -q 'category android:name="android.intent.category.LAUNCHER"'
-          echo "DALE 3D shell is the sole Android launcher entry point."
+          bash "${GITHUB_WORKSPACE}/dale-android/scripts/install-launcher.sh" "${ROOT}" "${GITHUB_WORKSPACE}"
 
 
       - name: Build debug APK
