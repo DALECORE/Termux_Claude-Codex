@@ -106,6 +106,14 @@ jobs:
           grep -q '@drawable/ic_foreground' "${SHORTCUTS}"
           ! grep -q '@drawable/ic_launcher_foreground' "${SHORTCUTS}"
 
+      - name: Apply DALE Java compatibility fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          CODECHAT="${GITHUB_WORKSPACE}/dale-build/payload/overlay/app/src/main/java/com/termux/app/CodeChatActivity.java"
+          sed -i 's/^[[:space:]]*View parent = fileRail.getParent()/        android.view.ViewGroup parent = fileRail.getParent()/' "${CODECHAT}"
+          grep -q 'android.view.ViewGroup parent = fileRail.getParent()' "${CODECHAT}"
+
       - name: Prepare pinned Termux source
         shell: bash
         run: |
